@@ -169,9 +169,6 @@ for($x = $start; $x <= $finish; $x++){
            <p><strong>To do:</strong> rewrite this in Javascript and remove the limit.</p>
         </dd>
 
-        <!-- <dt>7/29/2013</dt>
-        <dd>Found this old script and debugged it, a lot.</dd> -->
-
         <dt>6/27/2005</dt>
         <dd><p>Added functionality and other improvements:<br />
           <em>Presentation:</em><br />
