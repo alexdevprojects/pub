@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Bit mask exercise</title>
+		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+		<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+		<script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+		<script>
+
+    // $range = range(0,255);
+      var range = [];
+      for(x=0; x <= 255; x++){
+        range.push(x);
+      }
+      bits = [128,64,32,16,8,4,2,1];
+      mask = 0; // filter_input(INPUT_POST, 'mask', FILTER_VALIDATE_INT, array('default'=>0, 'min_range'=>0, 'max_range'=>255));// or 0;
+
+      function binaryze(num){
+        result = [];
+
+        $(bits).each(function(i,v){
+          bit = v;
+          if(num >= bit){
+            result[bit] = true;
+            num = num - bit;
+          }else{
+            result[bit] = false;
+          }
+        });
+
+        return result;
+      }
+
+      function draw(){
+        $(bits).each( function(i,v){
+          $('#menu').append('<td>' + v + '</td>');
+        });
+
+      }
+
+      function render(){
+        mask = parseInt($('input[name="mask"]').val());
+        // if(m === 0){}
+        if(mask > 255){
+          alert('Limit is 255');
+          mask = 255;
+        }
+        console.info('Rendering table for mask ' + mask);
+
+        tablemain = $('#main').find('tbody');
+        tablemain.html('');
+
+        $(range).each(function(i,v){
+          num = v;
+          my01 = binaryze(num);
+          // console.log(num);
+          // console.log(my01);
+
+          writeHTML = '';
+
+          writeHTML += '<tr><td';
+          writeHTML += (num == mask) ? ' class="highlight"': ''; // Highlight the cell that matches the input ?>>
+          writeHTML += '>' + num + '</td>';
+
+          if(num & mask){
+            cm = "checkmark";
+            ic = "&#x2713";
+          } else {
+            cm = "checknone";
+            ic = "&#x2717";
+          }
+
+          writeHTML += '<td><span class="' + cm + '" title="'+ num +' & ' + mask +'">' + ic + '</span></td>';
+
+
+    			// Now to explain why, break it down bit by bit:
+    			$(bits).each(function(i,v) {
+            bitcode = v;
+
+            					// <td<?= ($mask & $bitcode) ? ' class="highlight"' : '';?>>
+            					// 	<span class="<?= ($my01[$bitcode] == true && $mask & $bitcode) ? 'match' : 'nomat' ?>
+                      // "><?= ($my01[$bitcode] == true) ? '1' : '0' ?></span>
+            					// </td>
+            writeHTML += '<td';
+            writeHTML += (mask & bitcode) ? ' class="highlight"' : '';
+            writeHTML += '><span class="';
+            writeHTML += (my01[bitcode] === true && (mask & bitcode)) ? 'match' : 'nomat';
+            writeHTML += '">';
+            writeHTML += (my01[bitcode] === true) ? '1' : '0';
+            writeHTML += '</span></td>';
+          });
+
+          writeHTML += '</tr>';
+          // console.log(writeHTML);
+          tablemain.append(writeHTML);
+        });
+      }
+
+
+			$(document).ready( function(){
+        startmask = 15;
+        $('input[name="mask"]').val(startmask).change( function() {
+          render();
+        });
+        draw();
+				$('#menu').css('position', 'fixed');
+				$( ".spinner" ).spinner(
+          { min: 1
+          , max: 255
+          , stop: function(e,ui){
+              render();
+            }
+          });
+        render();
+			});
+		</script>
+
+		<style type="text/css">
+			body {
+				margin-top: 0px;
+				border-top: 0px;
+			}
+
+			#menu{
+				background-color: #DDDDDD;
+			}
+
+			.highlight {
+				background-color: yellow;
+			}
+
+			.match {
+				color: #CC6600;
+				font-weight: bold;
+			}
+
+			.nomat {
+				color: #7f7f7f;
+			}
+
+			.checkmark {
+				color: #CC6600;
+			}
+
+			.checknone {
+				color: #7f7f7f;
+			}
+
+			table {
+				border: 1px black solid;
+				padding-top: 0px;
+			}
+
+			td {
+				padding: 0px;
+				border: 1px black solid;
+				width: 57px !important;
+				text-align: center;
+			}
+
+			table thead tbody{
+				border-spacing: 0;
+				border-collapse: collapse;
+				padding: 0px;
+			}
+
+			.ui-spinner{
+				width: 45px;
+				height: 1em;
+			}
+
+			.spinner {
+				font-size: 0.7em !important;
+				text-align: right;
+				display: inline !important;
+			}
+
+			.footnote {
+				color: #7f7f7f;
+			}
+		</style>
+
+	</head>
+	<body>
+		<table id="main">
+			<thead>
+				<tr id="menu">
+					<td># &</td>
+					<td>
+						<span style="white-space: nowrap;">
+							<form method="POST">
+								<input name="mask" type="text" class="spinner" onsubmit="return false;" style="float:right" />
+							</form>
+						</span>
+					</td>
+          <!-- registers draw here -->
+				</tr>
+			</thead>
+			<tbody>
+				<tr id="menuph">
+					<td colspan="10">
+						GitHub: http://https://github.com/alexdevprojects/pub
+					</td>
+				</tr>
+
+			</tbody>
+		</table>
+		<p class="footnote">
+			The table above represents all the possible combinations of an 8 bit mask. <br />
+			The format of the rows from left to right is [number], [bit], [result (number & bit)], breakdown of registers. <br />
+			The default mask is 0 but if a value is selected in the form at the top the table will highlight the requested mask plus the registers that mask checks against.
+		</p>
+<!--
+About bit masking: https://answers.yahoo.com/question/index?qid=20111115042952AAb5lyN
+The Thinker:
+Bitmasks are a very resource friendly means of storing settings. A bitmask makes use of the fact that binary numbers are made up of 1's and 0's, each digit in a binary number being equivalent to one bit. This makes binary numbers ideal for use as "switches" to enable or disable certain facilities.
+
+Binary numbers are always read from right to left, and when used as bitmasks the same is true. The rightmost digit is always bit 0, so taking 1010 as an example bit 0 is off, bit 1 is on, bit 2 is off and bit 3 is on.
+
+A good example of bitmask usage is when setting the log levels for a particular service. For example, if you enable all the logging options for the SMTP service you will end up with the SMTPLog variable set to a value of 4382. Converting 4382 to its binary equivalent gives 1000100011110, that is bits 1, 2, 3, 4, 8 and 12 are all set.
+
+If you look at the Logs > Transaction Levels page you will see that there are 6 possible settings for SMTP logging that can be set via the GUI. Each one of these corresponds to one of the bits that are enabled (switched on) above.
+
+Bitmasks are always converted to their decimal equivalent prior to entering them.
+-->
+	</body>
+</html>
