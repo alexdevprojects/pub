@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Alexnow.com :: Prime number finder tool</title>
+    <style>
+      .results {
+        display: none;
+      }
+      #result_non_primes {
+        display: none;
+      }
+      .layouts {
+        display: inline-block;
+        width: 200px;
+      }
+      .layouts:first-of-type {
+        margin-left: 20px;
+      }
+      .layouts:nth-of-type(2) {
+        margin-left: 50px;
+      }
+    </style>
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+    <script>
+      Array.prototype.diff = function(a) {
+        return this.filter(function(i) {return a.indexOf(i) < 0;});
+      };
+
+      var defaults = [1,1000];
+
+      function number_format(n){
+        var parts = n.toString().split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join(".");
+      };
+
+      function drawoutput(n) {
+        if(typeof primearray === "undefined") return false;
+
+        var newcal = (typeof n !== "undefined") ? 1 : 0;
+
+        var layout = $('input[name="layout"]:checked').val();
+        var output = '<p>' + number_format(primearray.length) + " prime numbers found: </p>";
+        var canvas = $('#result_listing');
+
+
+
+        if(newcal){
+          $('#info_start').html(number_format(start));
+          $('#info_finish').html(number_format(finish));
+          $('#result_listing').slideUp();
+        }
+
+        canvas.html('');
+        $('.results').slideDown();
+
+        if(primearray.length > 0){
+          switch(layout){
+            case 's':
+            // case 'c': -- something is not letting me cascase cases and later use a ternary
+              var sep = '';
+              $(primearray).each( function(i,prime){
+                canvas.append(sep);
+                canvas.append( (numformat) ? number_format(prime) : prime );
+                sep = ' ';
+              });
+            break;
+
+            case 'c':
+              var sep = '';
+              $(primearray).each( function(i,prime){
+                canvas.append(sep);
+                canvas.append( (numformat) ? number_format(prime) : prime );
+                sep = ', ';
+              });
+            break;
+
+            case 'v':
+              $(primearray).each( function(i,prime){
+                canvas.append( (numformat) ? number_format(prime) : prime );
+                canvas.append(" <br />");
+              });
+            break;
+
+            default:
+            canvas.append("<textarea id='taresults' rows='20' cols='10' wrap='hard'>");
+              $(primearray).each( function(i,prime){
+                $('#taresults').append( (numformat) ? number_format(prime) : prime );
+                $('#taresults').append(" \n");
+              });
+              canvas.append("</textarea>");
+            break;
+
+          }
+        } else {
+          canvas.append("No prime numbers found");
+        }
+
+        if(newcal)
+          $('#result_listing').hide().slideDown();
+      }
+
+      function prime(e){
+
+        start = parseInt( $('input[name="start"]').val() );
+        finish = parseInt( $('input[name="finish"]').val() );
+
+        // Handle invalid or empty inputs
+        if(start > finish){
+          alert("Check that your values are numeric and the starting number is smaller than the finish number");
+          return false;
+        }
+
+        button = $('input[name="submit"]');
+        btntxt = button.val();
+        button.val('Processing...').prop('disabled', true);
+
+        numformat = $('input[name="numformat"]').is(':checked') ? 1 : 0;
+
+        // ####### BENCHMARK #######
+        var time_start = window.performance.now(); // microtime(true);
+        console.log('Staring time ' + time_start);
+        primearray = [];
+        operations = 0;
+
+        not_prime_array = [];
+        not_prime_divby = [];
+
+        // ####### CALCULATIONS #######
+        for(x = start; x <= finish; x++){
+          last_div = x / 2; // round()?
+          for(y = 2; y <= last_div; y++){
+            operations++;
+            // console.log(x + ' % ' + y + ' : ' + (x % y));
+            if(x % y === 0) { // $x is divisible by y without a residual and therefore not prime
+              not_prime_array.push(x);
+              not_prime_divby.push(y);
+              break;
+            }
+          }
+        }
+
+        // ####### BENCHMARK #######
+        var time_end = window.performance.now(); //microtime(true);
+        console.log('Finishing time ' + time_end);
+        var time_elapsed = (time_end - time_start) / 1000;
+        console.info('Elapsed time: ' + time_elapsed);
+
+        $('#info_process').html(number_format(operations) +' operations. Processing time: ' + time_elapsed + ' seconds.');
+
+        range = [];
+        for(x=start; x <= finish; x++){
+            range.push(x);
+        }
+
+        primearray = range.diff(not_prime_array);
+
+        if(primearray[0] === 1){
+          hasOne = primearray.shift();
+        }
+
+        drawoutput(true);
+
+        // Update composite numbers
+        npoutput = "";
+
+        for(x=0; x <= not_prime_array.length-1; x++){
+          npoutput += (numformat) ? number_format(not_prime_array[x]) : not_prime_array[x];
+          npoutput += ' div by ';
+          npoutput += (numformat) ? number_format(not_prime_divby[x]) : not_prime_divby[x];
+          npoutput += "<br />";
+        }
+
+        $('#result_non_primes').html(npoutput);
+
+        button.val(btntxt).prop("disabled", false);
+      };
+
+      $(document).ready(function(){
+        $('input[name="layout"]').change( drawoutput );
+
+        $('input[name="return_nonprimes"]').change(function(){
+          $('#result_non_primes').toggle( $(this).is(':checked') );
+        });
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <form name="form1" method="post">
+
+      <fieldset>
+        <legend>Get all prime numbers between</legend>
+        <input type="number" name="start" value="2" min="2" /> and
+        <input type="number" name="finish" value="1000" min="3" />  <br />
+        <input type="checkbox" name="numformat" /> Format numbers (i.e. 12,345) <br />
+
+        <input type="button" name="submit" value="Process" onclick="prime(this);" />
+
+      </fieldset>
+
+      <fieldset>
+        <legend>Layout:</legend>
+
+        <fieldset class="layouts">
+          <legend>Horizontal</legend>
+          <input type="radio" name="layout" value="s" checked />  Space separated <br />
+          <input type="radio" name="layout" value="c" />  Comma separated <br />
+        </fieldset>
+
+        <fieldset class="layouts">
+          <legend>Vertical</legend>
+          <input type="radio" name="layout" value="v" /> List <br />
+          <input type="radio" name="layout" value="t" /> Textarea
+        </fieldset>
+      </fieldset>
+
+      <fieldset class="results">
+        <legend>Info:</legend>
+          <p>Searching for prime numbers between <span id="info_start"></span> and <span id="info_finish"></span>...</p>
+          <p><span id="info_process"></span></p>
+      </fieldset>
+
+      <fieldset class="results">
+        <legend>Results: </legend>
+        <div id="result_listing"></div>
+        <p><input type="checkbox" name="return_nonprimes" /> Show list of composite numbers and first divisor without a residual.</p>
+        <div id="result_non_primes"></div>
+      </fieldset>
+
+      <hr />
+      <fieldset>
+        <legend>About this tool:</legend>
+        <p><strong>Finds all prime numbers within a range of 2 values.</strong></p>
+        <blockquote>A prime number (or a prime) is a natural number greater than 1 that has no positive divisors other than 1 and itself. A natural number greater than 1 that is not a prime number is called a composite number.</blockquote>
+        <hr />
+        Change log:
+        <dl>
+          <dt>6/17/2015</dt>
+          <dd><p>Port from PHP version</p>
+          </dd>
+        </dl>
+      </fieldset>
+    </form>
+  </body>
+</html>
